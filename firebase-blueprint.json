@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered Blush member profile stored after Google Sign-In.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID matching the document ID."
+        },
+        "email": {
+          "type": "string",
+          "description": "Verified Google account email address."
+        },
+        "fullName": {
+          "type": "string",
+          "description": "User full display name (2-60 characters)."
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique handle for Blush welcome card (3-30 characters, alphanumeric/underscore/dot)."
+        },
+        "pinkStyle": {
+          "type": "string",
+          "enum": ["ROSE_QUARTZ", "SAKURA_SOFT", "BERRY_GLOW", "CORAL_BLUSH"],
+          "description": "Preferred pink visual accent style selected during registration."
+        },
+        "bio": {
+          "type": "string",
+          "description": "Optional short bio or welcome greeting (0-160 characters)."
+        },
+        "photoUrl": {
+          "type": "string",
+          "description": "Optional Google profile photo URL (up to 500 characters)."
+        },
+        "loginCount": {
+          "type": "integer",
+          "description": "Total number of authenticated Firebase login sessions recorded for this user."
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the most recent authenticated login (FieldValue.serverTimestamp())."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when registration was completed (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest profile update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "email",
+        "fullName",
+        "username",
+        "pinkStyle",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LoginLog": {
+      "title": "LoginLog",
+      "description": "Immutable login session record persisted to Firestore on Firebase authentication.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID matching the parent user document."
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["google.com"],
+          "description": "Firebase Auth identity provider used for login."
+        },
+        "email": {
+          "type": "string",
+          "description": "Authenticated user email at login time."
+        },
+        "deviceLabel": {
+          "type": "string",
+          "description": "Readable device and app label for the login session."
+        },
+        "loginAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the login occurred (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "provider",
+        "email",
+        "deviceLabel",
+        "loginAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Private owner-only user registration profile and welcome metadata."
+    },
+    "/users/{userId}/loginLogs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/LoginLog"
+      },
+      "description": "Owner-only subcollection tracking authenticated Firebase login sessions."
+    }
+  }
+}

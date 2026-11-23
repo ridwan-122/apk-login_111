@@ -1,0 +1,6 @@
+{
+  "name": "Blush",
+  "description": "Aplikasi login, registrasi profil, dan halaman selamat datang bertema pink dengan Google Sign-In dan Firebase Firestore.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

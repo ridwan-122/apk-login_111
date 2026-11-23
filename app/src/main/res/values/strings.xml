@@ -1,0 +1,64 @@
+<resources>
+    <string name="app_name">Blush</string>
+    <string name="auth_brand_tagline">Ruang hangat &amp; aman untuk akunmu</string>
+    <string name="auth_tab_login">Masuk</string>
+    <string name="auth_tab_register">Daftar</string>
+    <string name="auth_login_title">Selamat Datang Kembali</string>
+    <string name="auth_login_subtitle">Masuk cepat dengan akun Google-mu untuk langsung menuju halaman selamat datang.</string>
+    <string name="auth_register_title">Buat Akun Blush Baru</string>
+    <string name="auth_register_subtitle">Daftar praktis memakai akun Google, lalu lengkapi profil pink pilihanmu.</string>
+    <string name="auth_button_login_google">Masuk dengan Google</string>
+    <string name="auth_button_register_google">Daftar dengan Google</string>
+    <string name="auth_security_note">Terhubung aman via Google Sign-In &amp; Cloud Firestore</string>
+    <string name="auth_error_missing_config">Konfigurasi Google Sign-In belum tersedia.</string>
+    <string name="auth_error_unexpected_credential">Tipe kredensial tidak dikenali.</string>
+    <string name="auth_error_generic">Gagal masuk dengan Google. Silakan coba lagi.</string>
+
+    <string name="reg_header_title">Lengkapi Registrasi</string>
+    <string name="reg_edit_header_title">Ubah Profil Blush</string>
+    <string name="reg_header_subtitle">Sesuaikan identitas dan nuansa pink favoritmu sebelum masuk ke beranda.</string>
+    <string name="reg_label_full_name">Nama Lengkap</string>
+    <string name="reg_hint_full_name">Contoh: Kirana Putri</string>
+    <string name="reg_label_username">Username</string>
+    <string name="reg_hint_username">Contoh: kirana.blush</string>
+    <string name="reg_label_bio">Bio Singkat (Opsional)</string>
+    <string name="reg_hint_bio">Ceritakan sedikit tentang dirimu...</string>
+    <string name="reg_label_pink_style">Pilih Gaya Pink Favorit</string>
+    <string name="reg_button_submit">Daftar &amp; Masuk</string>
+    <string name="reg_button_save">Simpan Perubahan</string>
+    <string name="reg_button_cancel">Batal</string>
+    <string name="reg_error_full_name">Nama lengkap minimal 2 karakter dan maksimal 60 karakter.</string>
+    <string name="reg_error_username">Username 3–30 karakter (huruf, angka, titik, atau garis bawah).</string>
+    <string name="reg_error_bio">Bio maksimal 160 karakter.</string>
+
+    <string name="welcome_badge_verified">Akun Terverifikasi</string>
+    <string name="welcome_title_format">Selamat Datang, %1$s!</string>
+    <string name="welcome_subtitle">Senang melihatmu kembali di ruang Blush bertema pink yang hangat.</string>
+    <string name="welcome_card_member">Kartu Member Blush</string>
+    <string name="welcome_label_username">Username</string>
+    <string name="welcome_label_email">Email Google</string>
+    <string name="welcome_label_style">Nuansa Pink</string>
+    <string name="welcome_label_joined">Bergabung Sejak</string>
+    <string name="welcome_label_bio">Tentang Kamu</string>
+    <string name="welcome_empty_bio">Belum ada bio singkat. Tambahkan pesan perkenalanmu kapan saja.</string>
+    <string name="welcome_auth_card_title">Autentikasi &amp; Database Firebase</string>
+    <string name="welcome_auth_badge_connected">Terhubung</string>
+    <string name="welcome_label_total_logins">Total Sesi Login</string>
+    <string name="welcome_label_last_login">Terakhir Login</string>
+    <string name="welcome_label_provider">Metode Autentikasi</string>
+    <string name="welcome_value_provider">Google Sign-In • Firebase Auth</string>
+    <string name="welcome_label_recent_sessions">Riwayat Login Terbaru</string>
+    <string name="welcome_empty_logs">Sesi login aktif sedang disinkronkan ke Firestore…</string>
+    <string name="welcome_button_edit_profile">Ubah Data Registrasi</string>
+    <string name="welcome_button_sign_out">Keluar Akun</string>
+    <string name="welcome_loading">Menyiapkan halaman selamat datang…</string>
+    <string name="welcome_error_title">Gagal Memuat Profil</string>
+    <string name="welcome_retry">Coba Lagi</string>
+    <string name="welcome_save_success">Profil registrasi berhasil diperbarui!</string>
+
+    <string name="cd_login_hero">Ilustrasi pita dan kelopak bunga pink Blush</string>
+    <string name="cd_welcome_banner">Banner perayaan selamat datang bertema pink</string>
+    <string name="cd_user_avatar">Foto profil pengguna</string>
+    <string name="cd_sign_out">Keluar dari akun</string>
+    <string name="cd_back">Kembali</string>
+</resources>
