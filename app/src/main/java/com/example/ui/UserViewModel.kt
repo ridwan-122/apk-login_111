@@ -110,7 +110,6 @@ class UserViewModel(
     sessionRecorded = true
     viewModelScope.launch {
       repository.recordLoginSession().onFailure {
-        // Allow retry if session log failed transiently
         sessionRecorded = false
       }
     }
@@ -133,6 +132,8 @@ class UserViewModel(
   fun submitRegistration(
     fullName: String,
     username: String,
+    phone: String,
+    city: String,
     pinkStyle: PinkStyle,
     bio: String,
     photoUrl: String?,
@@ -140,12 +141,13 @@ class UserViewModel(
     if (_formState.value.isSubmitting) return
     viewModelScope.launch {
       _formState.update { it.copy(isSubmitting = true, submitError = null) }
-      // Registration itself records the initial login session in Firestore
       sessionRecorded = true
       val result =
         repository.registerProfile(
           fullName = fullName,
           username = username,
+          phone = phone,
+          city = city,
           pinkStyle = pinkStyle,
           bio = bio,
           photoUrl = photoUrl,
@@ -171,6 +173,8 @@ class UserViewModel(
   fun submitProfileUpdate(
     fullName: String,
     username: String,
+    phone: String,
+    city: String,
     pinkStyle: PinkStyle,
     bio: String,
     photoUrl: String?,
@@ -182,6 +186,8 @@ class UserViewModel(
         repository.updateProfile(
           fullName = fullName,
           username = username,
+          phone = phone,
+          city = city,
           pinkStyle = pinkStyle,
           bio = bio,
           photoUrl = photoUrl,

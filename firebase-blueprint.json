@@ -2,7 +2,7 @@
   "entities": {
     "UserProfile": {
       "title": "UserProfile",
-      "description": "Registered Blush member profile stored after Google Sign-In.",
+      "description": "Registered Blush member profile and personal data stored after Google Sign-In.",
       "type": "object",
       "properties": {
         "userId": {
@@ -20,6 +20,14 @@
         "username": {
           "type": "string",
           "description": "Unique handle for Blush welcome card (3-30 characters, alphanumeric/underscore/dot)."
+        },
+        "phone": {
+          "type": "string",
+          "description": "User phone or WhatsApp number (8-20 characters)."
+        },
+        "city": {
+          "type": "string",
+          "description": "User city or domicile (2-50 characters)."
         },
         "pinkStyle": {
           "type": "string",
@@ -106,7 +114,7 @@
       "schema": {
         "$ref": "#/entities/UserProfile"
       },
-      "description": "Private owner-only user registration profile and welcome metadata."
+      "description": "Private owner-only user registration profile and personal data."
     },
     "/users/{userId}/loginLogs/{logId}": {
       "schema": {

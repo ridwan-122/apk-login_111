@@ -35,7 +35,9 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.LocationCity
 import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.ButtonDefaults
@@ -366,6 +368,18 @@ fun WelcomeScreen(
                 icon = Icons.Rounded.Email,
                 label = stringResource(R.string.welcome_label_email),
                 value = profile.email,
+              )
+              HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+              ProfileDetailRow(
+                icon = Icons.Rounded.Phone,
+                label = stringResource(R.string.welcome_label_phone),
+                value = profile.phone.ifBlank { "-" },
+              )
+              HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+              ProfileDetailRow(
+                icon = Icons.Rounded.LocationCity,
+                label = stringResource(R.string.welcome_label_city),
+                value = profile.city.ifBlank { "-" },
               )
               HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
               ProfileDetailRow(

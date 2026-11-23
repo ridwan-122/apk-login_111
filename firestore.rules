@@ -31,6 +31,8 @@ service cloud.firestore {
              data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 60 &&
              data.username is string && data.username.size() >= 3 && data.username.size() <= 30 &&
              data.username.matches('^[a-zA-Z0-9_.]+$') &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 20)) &&
+             (!('city' in data) || (data.city is string && data.city.size() <= 50)) &&
              data.pinkStyle in ['ROSE_QUARTZ', 'SAKURA_SOFT', 'BERRY_GLOW', 'CORAL_BLUSH'] &&
              (!('bio' in data) || (data.bio is string && data.bio.size() <= 160)) &&
              (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 500)) &&
@@ -55,7 +57,7 @@ service cloud.firestore {
       allow create: if isOwner(userId) &&
                        isValidId(userId) &&
                        incoming().keys().hasAll(['userId', 'email', 'fullName', 'username', 'pinkStyle', 'createdAt', 'updatedAt']) &&
-                       incoming().keys().hasOnly(['userId', 'email', 'fullName', 'username', 'pinkStyle', 'bio', 'photoUrl', 'loginCount', 'lastLoginAt', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'email', 'fullName', 'username', 'phone', 'city', 'pinkStyle', 'bio', 'photoUrl', 'loginCount', 'lastLoginAt', 'createdAt', 'updatedAt']) &&
                        isValidUserProfile(incoming());
 
       allow update: if isOwner(userId) &&
@@ -63,8 +65,8 @@ service cloud.firestore {
                        isValidUserProfile(incoming()) &&
                        incoming().userId == existing().userId &&
                        incoming().createdAt == existing().createdAt && (
-                         // Action 1: Edit registration profile fields
-                         incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'username', 'pinkStyle', 'bio', 'photoUrl', 'updatedAt']) ||
+                         // Action 1: Edit registration profile & personal data fields
+                         incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'username', 'phone', 'city', 'pinkStyle', 'bio', 'photoUrl', 'updatedAt']) ||
                          // Action 2: Record authenticated login session
                          incoming().diff(existing()).affectedKeys().hasOnly(['loginCount', 'lastLoginAt', 'updatedAt'])
                        );

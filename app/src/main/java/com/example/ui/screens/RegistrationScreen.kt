@@ -5,12 +5,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -33,11 +30,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.AlternateEmail
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.Email
-import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.LocationCity
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -68,29 +65,37 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.R
 import com.example.data.PinkStyle
 import com.example.data.ProfileValidation
-import com.example.data.UserProfile
+import com.example.ui.components.PinkStyleSelector
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RegistrationScreen(
   email: String,
   initialFullName: String,
   initialUsername: String,
+  initialPhone: String,
+  initialCity: String,
   initialBio: String,
   initialPinkStyle: PinkStyle,
   photoUrl: String?,
   isEditMode: Boolean,
   isSubmitting: Boolean,
   submitError: String?,
-  onSubmit: (fullName: String, username: String, pinkStyle: PinkStyle, bio: String) -> Unit,
+  onSubmit: (
+    fullName: String,
+    username: String,
+    phone: String,
+    city: String,
+    pinkStyle: PinkStyle,
+    bio: String,
+  ) -> Unit,
   onCancelEdit: () -> Unit,
   onSignOut: () -> Unit,
   modifier: Modifier = Modifier,
@@ -101,6 +106,8 @@ fun RegistrationScreen(
 
   var fullName by rememberSaveable(initialFullName) { mutableStateOf(initialFullName) }
   var username by rememberSaveable(initialUsername) { mutableStateOf(initialUsername) }
+  var phone by rememberSaveable(initialPhone) { mutableStateOf(initialPhone) }
+  var city by rememberSaveable(initialCity) { mutableStateOf(initialCity) }
   var bio by rememberSaveable(initialBio) { mutableStateOf(initialBio) }
   var selectedStyleName by rememberSaveable(initialPinkStyle.name) {
     mutableStateOf(initialPinkStyle.name)
@@ -110,8 +117,11 @@ fun RegistrationScreen(
   val selectedStyle = PinkStyle.fromName(selectedStyleName)
   val isFullNameValid = ProfileValidation.isValidFullName(fullName)
   val isUsernameValid = ProfileValidation.isValidUsername(username)
+  val isPhoneValid = ProfileValidation.isValidPhone(phone)
+  val isCityValid = ProfileValidation.isValidCity(city)
   val isBioValid = ProfileValidation.isValidBio(bio)
-  val canSubmit = isFullNameValid && isUsernameValid && isBioValid && !isSubmitting
+  val canSubmit =
+    isFullNameValid && isUsernameValid && isPhoneValid && isCityValid && isBioValid && !isSubmitting
 
   val bgBrush =
     Brush.verticalGradient(
@@ -262,7 +272,7 @@ fun RegistrationScreen(
           ) {
             Column(
               modifier = Modifier.fillMaxWidth().padding(20.dp),
-              verticalArrangement = Arrangement.spacedBy(16.dp),
+              verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
               val fieldColors =
                 OutlinedTextFieldDefaults.colors(
@@ -329,6 +339,67 @@ fun RegistrationScreen(
               )
 
               OutlinedTextField(
+                value = phone,
+                onValueChange = { raw ->
+                  val filtered = raw.filter { it.isDigit() || it == '+' || it == '-' || it == ' ' }
+                  if (filtered.length <= 20) phone = filtered
+                },
+                label = { Text(stringResource(R.string.reg_label_phone)) },
+                placeholder = { Text(stringResource(R.string.reg_hint_phone)) },
+                leadingIcon = {
+                  Icon(
+                    imageVector = Icons.Rounded.Phone,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                  )
+                },
+                singleLine = true,
+                isError = (attemptedSubmit || phone.isNotEmpty()) && !isPhoneValid,
+                supportingText = {
+                  if ((attemptedSubmit || phone.isNotEmpty()) && !isPhoneValid) {
+                    Text(stringResource(R.string.reg_error_phone))
+                  }
+                },
+                keyboardOptions =
+                  KeyboardOptions(
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Next,
+                  ),
+                shape = MaterialTheme.shapes.medium,
+                colors = fieldColors,
+                modifier = Modifier.fillMaxWidth().testTag("phone_input"),
+              )
+
+              OutlinedTextField(
+                value = city,
+                onValueChange = { if (it.length <= 50) city = it },
+                label = { Text(stringResource(R.string.reg_label_city)) },
+                placeholder = { Text(stringResource(R.string.reg_hint_city)) },
+                leadingIcon = {
+                  Icon(
+                    imageVector = Icons.Rounded.LocationCity,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                  )
+                },
+                singleLine = true,
+                isError = (attemptedSubmit || city.isNotEmpty()) && !isCityValid,
+                supportingText = {
+                  if ((attemptedSubmit || city.isNotEmpty()) && !isCityValid) {
+                    Text(stringResource(R.string.reg_error_city))
+                  }
+                },
+                keyboardOptions =
+                  KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next,
+                  ),
+                shape = MaterialTheme.shapes.medium,
+                colors = fieldColors,
+                modifier = Modifier.fillMaxWidth().testTag("city_input"),
+              )
+
+              OutlinedTextField(
                 value = bio,
                 onValueChange = { if (it.length <= 160) bio = it },
                 label = { Text(stringResource(R.string.reg_label_bio)) },
@@ -348,11 +419,8 @@ fun RegistrationScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                   ) {
-                    Text(
-                      text =
-                        if (!isBioValid) stringResource(R.string.reg_error_bio) else ""
-                    )
-                    Text(text = "${bio.trim().length}/160")
+                    Text(if (!isBioValid) stringResource(R.string.reg_error_bio) else "")
+                    Text("${bio.trim().length}/160")
                   }
                 },
                 shape = MaterialTheme.shapes.medium,
@@ -360,45 +428,10 @@ fun RegistrationScreen(
                 modifier = Modifier.fillMaxWidth().testTag("bio_input"),
               )
 
-              // Pink Style Selector
-              Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                  Icon(
-                    imageVector = Icons.Rounded.Palette,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp),
-                  )
-                  Text(
-                    text = stringResource(R.string.reg_label_pink_style),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                  )
-                }
-
-                FlowRow(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.spacedBy(10.dp),
-                  verticalArrangement = Arrangement.spacedBy(10.dp),
-                  maxItemsInEachRow = 2,
-                ) {
-                  PinkStyle.entries.forEach { styleOption ->
-                    val isSelected = styleOption == selectedStyle
-                    PinkStyleOptionCard(
-                      styleOption = styleOption,
-                      selected = isSelected,
-                      onClick = { selectedStyleName = styleOption.name },
-                      modifier =
-                        Modifier
-                          .weight(1f)
-                          .testTag("pink_style_${styleOption.name}"),
-                    )
-                  }
-                }
-              }
+              PinkStyleSelector(
+                selectedStyle = selectedStyle,
+                onSelectStyle = { selectedStyleName = it.name },
+              )
             }
           }
 
@@ -423,7 +456,7 @@ fun RegistrationScreen(
             onClick = {
               attemptedSubmit = true
               if (canSubmit) {
-                onSubmit(fullName, username, selectedStyle, bio)
+                onSubmit(fullName, username, phone, city, selectedStyle, bio)
               }
             },
             enabled = !isSubmitting,
@@ -481,73 +514,6 @@ fun RegistrationScreen(
 
           Spacer(modifier = Modifier.height(24.dp))
         }
-      }
-    }
-  }
-}
-
-@Composable
-private fun PinkStyleOptionCard(
-  styleOption: PinkStyle,
-  selected: Boolean,
-  onClick: () -> Unit,
-  modifier: Modifier = Modifier,
-) {
-  val borderColor =
-    if (selected) MaterialTheme.colorScheme.primary
-    else MaterialTheme.colorScheme.outlineVariant
-  val containerColor =
-    if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-    else MaterialTheme.colorScheme.surfaceContainerLow
-
-  Surface(
-    color = containerColor,
-    shape = MaterialTheme.shapes.medium,
-    border = BorderStroke(if (selected) 2.dp else 1.dp, borderColor),
-    modifier =
-      modifier
-        .minimumInteractiveComponentSize()
-        .clip(MaterialTheme.shapes.medium)
-        .clickable(onClick = onClick),
-  ) {
-    Row(
-      modifier = Modifier.padding(12.dp),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-      Box(
-        modifier =
-          Modifier
-            .size(32.dp)
-            .clip(CircleShape)
-            .background(
-              Brush.linearGradient(
-                colors = listOf(styleOption.startColor, styleOption.endColor)
-              )
-            ),
-        contentAlignment = Alignment.Center,
-      ) {
-        if (selected) {
-          Icon(
-            imageVector = Icons.Rounded.CheckCircle,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(18.dp),
-          )
-        }
-      }
-      Column(modifier = Modifier.weight(1f)) {
-        Text(
-          text = styleOption.label,
-          style = MaterialTheme.typography.labelLarge,
-          color = MaterialTheme.colorScheme.onSurface,
-          fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-          text = styleOption.tagline,
-          style = MaterialTheme.typography.labelSmall,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
       }
     }
   }

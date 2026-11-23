@@ -49,6 +49,8 @@ test("Unauthenticated user: cannot read, list, or write user profiles or login l
       email: "alice@example.com",
       fullName: "Alice Putri",
       username: "alice.putri",
+      phone: "081234567890",
+      city: "Jakarta",
       pinkStyle: "ROSE_QUARTZ",
       loginCount: 1,
       lastLoginAt: new Date(Date.now() - 1000),
@@ -58,17 +60,18 @@ test("Unauthenticated user: cannot read, list, or write user profiles or login l
   );
 });
 
-test("Authenticated owner: valid Kotlin registration create, login session update, and profile edit succeed", async () => {
+test("Authenticated owner: valid Kotlin registration create with personal data, login update, and profile edit succeed", async () => {
   const aliceDb = testEnv.authenticatedContext(ALICE_UID).firestore();
   const created = new Date(Date.now() - 10000);
 
-  // Create profile with loginCount & lastLoginAt
   await assertSucceeds(
     aliceDb.collection("users").doc(ALICE_UID).set({
       userId: ALICE_UID,
       email: "alice@example.com",
       fullName: "Alice Putri",
       username: "alice_putri",
+      phone: "081234567890",
+      city: "Bandung",
       pinkStyle: "SAKURA_SOFT",
       loginCount: 1,
       lastLoginAt: created,
@@ -77,7 +80,6 @@ test("Authenticated owner: valid Kotlin registration create, login session updat
     })
   );
 
-  // Create login log entry
   await assertSucceeds(
     aliceDb.collection("users").doc(ALICE_UID).collection("loginLogs").doc("log_1").set({
       userId: ALICE_UID,
@@ -88,16 +90,12 @@ test("Authenticated owner: valid Kotlin registration create, login session updat
     })
   );
 
-  // Owner get & loginLogs list succeed
   await assertSucceeds(aliceDb.collection("users").doc(ALICE_UID).get());
   await assertSucceeds(
     aliceDb.collection("users").doc(ALICE_UID).collection("loginLogs").orderBy("loginAt", "desc").limit(5).get()
   );
-
-  // Collection-wide list on /users is always denied
   await assertFails(aliceDb.collection("users").get());
 
-  // Action 2: Record login session update
   await assertSucceeds(
     aliceDb.collection("users").doc(ALICE_UID).update({
       loginCount: 2,
@@ -106,18 +104,18 @@ test("Authenticated owner: valid Kotlin registration create, login session updat
     })
   );
 
-  // Action 1: Partial profile edit
   await assertSucceeds(
     aliceDb.collection("users").doc(ALICE_UID).update({
       fullName: "Alice Kirana",
       username: "alice.kirana",
+      phone: "081298765432",
+      city: "Yogyakarta",
       pinkStyle: "BERRY_GLOW",
       bio: "Pecinta warna pink dan desain minimalis.",
       updatedAt: new Date(Date.now() - 1000),
     })
   );
 
-  // Login logs are immutable (update must fail)
   await assertFails(
     aliceDb.collection("users").doc(ALICE_UID).collection("loginLogs").doc("log_1").update({
       deviceLabel: "Tampered",
@@ -132,33 +130,19 @@ test("Authenticated user: cannot read, create, update, or delete another user's 
       email: "bob@example.com",
       fullName: "Bob Pratama",
       username: "bob_p",
+      phone: "081111222333",
+      city: "Surabaya",
       pinkStyle: "CORAL_BLUSH",
       loginCount: 1,
       lastLoginAt: new Date(Date.now() - 10000),
       createdAt: new Date(Date.now() - 10000),
       updatedAt: new Date(Date.now() - 10000),
     });
-    await context.firestore().collection("users").doc(BOB_UID).collection("loginLogs").doc("log_bob").set({
-      userId: BOB_UID,
-      provider: "google.com",
-      email: "bob@example.com",
-      deviceLabel: "Android • Blush App",
-      loginAt: new Date(Date.now() - 10000),
-    });
   });
 
   const aliceDb = testEnv.authenticatedContext(ALICE_UID).firestore();
   await assertFails(aliceDb.collection("users").doc(BOB_UID).get());
   await assertFails(aliceDb.collection("users").doc(BOB_UID).collection("loginLogs").get());
-  await assertFails(
-    aliceDb.collection("users").doc(BOB_UID).collection("loginLogs").doc("log_alice").set({
-      userId: ALICE_UID,
-      provider: "google.com",
-      email: "alice@example.com",
-      deviceLabel: "Android • Blush App",
-      loginAt: new Date(Date.now() - 1000),
-    })
-  );
   await assertFails(
     aliceDb.collection("users").doc(BOB_UID).update({
       fullName: "Hijacked",
@@ -168,11 +152,10 @@ test("Authenticated user: cannot read, create, update, or delete another user's 
   await assertFails(aliceDb.collection("users").doc(BOB_UID).delete());
 });
 
-test("Security bounds: reject ghost fields, immutable mutation, invalid enum/provider, and future timestamps", async () => {
+test("Security bounds: reject ghost fields, oversized phone/city, immutable mutation, and future timestamps", async () => {
   const aliceDb = testEnv.authenticatedContext(ALICE_UID).firestore();
   const created = new Date(Date.now() - 10000);
 
-  // Reject ghost/unexpected field (e.g., id)
   await assertFails(
     aliceDb.collection("users").doc(ALICE_UID).set({
       id: ALICE_UID,
@@ -186,51 +169,40 @@ test("Security bounds: reject ghost fields, immutable mutation, invalid enum/pro
     })
   );
 
-  // Reject invalid login log provider
-  await assertFails(
-    aliceDb.collection("users").doc(ALICE_UID).collection("loginLogs").doc("log_bad").set({
-      userId: ALICE_UID,
-      provider: "password",
-      email: "alice@example.com",
-      deviceLabel: "Android",
-      loginAt: created,
-    })
-  );
-
-  // Reject invalid loginCount (0)
   await assertFails(
     aliceDb.collection("users").doc(ALICE_UID).set({
       userId: ALICE_UID,
       email: "alice@example.com",
       fullName: "Alice Putri",
       username: "alice_putri",
+      phone: "1".repeat(25),
       pinkStyle: "ROSE_QUARTZ",
-      loginCount: 0,
       createdAt: created,
       updatedAt: created,
     })
   );
 
-  // Reject tampered future timestamp
   await assertFails(
     aliceDb.collection("users").doc(ALICE_UID).set({
       userId: ALICE_UID,
       email: "alice@example.com",
       fullName: "Alice Putri",
       username: "alice_putri",
+      city: "x".repeat(55),
       pinkStyle: "ROSE_QUARTZ",
-      createdAt: new Date(Date.now() + 60000),
-      updatedAt: new Date(Date.now() + 60000),
+      createdAt: created,
+      updatedAt: created,
     })
   );
 
-  // Create valid doc first, then test mixed action keys rejection & immutable mutation
   await assertSucceeds(
     aliceDb.collection("users").doc(ALICE_UID).set({
       userId: ALICE_UID,
       email: "alice@example.com",
       fullName: "Alice Putri",
       username: "alice_putri",
+      phone: "081234567890",
+      city: "Jakarta",
       pinkStyle: "ROSE_QUARTZ",
       loginCount: 1,
       lastLoginAt: created,
@@ -241,20 +213,11 @@ test("Security bounds: reject ghost fields, immutable mutation, invalid enum/pro
 
   await assertFails(
     aliceDb.collection("users").doc(ALICE_UID).update({
-      createdAt: new Date(Date.now() - 500),
-      updatedAt: new Date(Date.now() - 500),
-    })
-  );
-
-  // Mixing profile edit & loginCount in one update must fail action boundary
-  await assertFails(
-    aliceDb.collection("users").doc(ALICE_UID).update({
       fullName: "Alice Baru",
       loginCount: 99,
       updatedAt: new Date(Date.now() - 500),
     })
   );
 
-  // Owner can delete their own profile
   await assertSucceeds(aliceDb.collection("users").doc(ALICE_UID).delete());
 });

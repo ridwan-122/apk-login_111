@@ -34,10 +34,13 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -54,6 +57,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.auth.authStateFlow
 import com.example.auth.signOut
+import com.example.data.PendingProfileDraft
 import com.example.data.PinkStyle
 import com.example.data.ProfileValidation
 import com.example.data.UserRepository
@@ -84,19 +88,31 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(auth: FirebaseAuth = Firebase.auth) {
   val currentUser by auth.authStateFlow().collectAsStateWithLifecycle(initialValue = auth.currentUser)
+  var pendingDraft by remember { mutableStateOf<PendingProfileDraft?>(null) }
   val user = currentUser
 
   if (user == null) {
-    AuthScreen(onAuthSuccess = {})
+    AuthScreen(
+      onPrepareDraft = { draft -> pendingDraft = draft },
+      onAuthSuccess = {},
+    )
   } else {
     key(user.uid) {
-      AuthenticatedSession(user = user)
+      AuthenticatedSession(
+        user = user,
+        pendingDraft = pendingDraft,
+        onClearDraft = { pendingDraft = null },
+      )
     }
   }
 }
 
 @Composable
-private fun AuthenticatedSession(user: FirebaseUser) {
+private fun AuthenticatedSession(
+  user: FirebaseUser,
+  pendingDraft: PendingProfileDraft?,
+  onClearDraft: () -> Unit,
+) {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
   val credentialManager = remember(context) { CredentialManager.create(context) }
@@ -121,14 +137,41 @@ private fun AuthenticatedSession(user: FirebaseUser) {
   val profileState by viewModel.profileState.collectAsStateWithLifecycle()
   val loginLogs by viewModel.loginLogsState.collectAsStateWithLifecycle()
   val formState by viewModel.formState.collectAsStateWithLifecycle()
+  var autoSubmittedDraft by remember(user.uid) { mutableStateOf(false) }
 
-  androidx.compose.runtime.LaunchedEffect(profileState) {
-    if (profileState is ProfileUiState.Registered) {
-      viewModel.recordLoginIfNeeded()
+  LaunchedEffect(profileState, pendingDraft) {
+    when (profileState) {
+      is ProfileUiState.Registered -> {
+        viewModel.recordLoginIfNeeded()
+        if (pendingDraft != null) onClearDraft()
+      }
+
+      is ProfileUiState.NeedsRegistration -> {
+        if (
+          !autoSubmittedDraft &&
+            pendingDraft != null &&
+            pendingDraft.isRegisterMode &&
+            pendingDraft.isCompleteForRegistration()
+        ) {
+          autoSubmittedDraft = true
+          viewModel.submitRegistration(
+            fullName = pendingDraft.fullName,
+            username = pendingDraft.username,
+            phone = pendingDraft.phone,
+            city = pendingDraft.city,
+            pinkStyle = pendingDraft.pinkStyle,
+            bio = pendingDraft.bio,
+            photoUrl = user.photoUrl?.toString(),
+          )
+        }
+      }
+
+      else -> Unit
     }
   }
 
   val handleSignOut: () -> Unit = {
+    onClearDraft()
     signOut(credentialManager = credentialManager, scope = scope)
   }
 
@@ -147,23 +190,32 @@ private fun AuthenticatedSession(user: FirebaseUser) {
 
       is ProfileUiState.NeedsRegistration -> {
         val suggestedUsername =
-          remember(user.uid, user.displayName, user.email) {
-            ProfileValidation.suggestUsername(user.displayName, user.email)
+          remember(user.uid, user.displayName, user.email, pendingDraft) {
+            pendingDraft?.username?.takeIf { it.isNotBlank() }
+              ?: ProfileValidation.suggestUsername(user.displayName, user.email)
           }
+        val initialName =
+          pendingDraft?.fullName?.takeIf { it.isNotBlank() }
+            ?: user.displayName?.take(60).orEmpty()
+
         RegistrationScreen(
-          email = user.email ?: "${user.uid.take(12)}@blush.app",
-          initialFullName = user.displayName?.take(60).orEmpty(),
+          email = user.email ?: pendingDraft?.enteredEmail?.takeIf { it.isNotBlank() } ?: "${user.uid.take(12)}@blush.app",
+          initialFullName = initialName,
           initialUsername = suggestedUsername,
-          initialBio = "",
-          initialPinkStyle = PinkStyle.ROSE_QUARTZ,
+          initialPhone = pendingDraft?.phone.orEmpty(),
+          initialCity = pendingDraft?.city.orEmpty(),
+          initialBio = pendingDraft?.bio.orEmpty(),
+          initialPinkStyle = pendingDraft?.pinkStyle ?: PinkStyle.ROSE_QUARTZ,
           photoUrl = user.photoUrl?.toString(),
           isEditMode = false,
           isSubmitting = formState.isSubmitting,
           submitError = formState.submitError,
-          onSubmit = { fullName, username, pinkStyle, bio ->
+          onSubmit = { fullName, username, phone, city, pinkStyle, bio ->
             viewModel.submitRegistration(
               fullName = fullName,
               username = username,
+              phone = phone,
+              city = city,
               pinkStyle = pinkStyle,
               bio = bio,
               photoUrl = user.photoUrl?.toString(),
@@ -180,16 +232,20 @@ private fun AuthenticatedSession(user: FirebaseUser) {
             email = state.profile.email,
             initialFullName = state.profile.fullName,
             initialUsername = state.profile.username,
+            initialPhone = state.profile.phone,
+            initialCity = state.profile.city,
             initialBio = state.profile.bio,
             initialPinkStyle = state.profile.resolvedPinkStyle(),
             photoUrl = state.profile.photoUrl ?: user.photoUrl?.toString(),
             isEditMode = true,
             isSubmitting = formState.isSubmitting,
             submitError = formState.submitError,
-            onSubmit = { fullName, username, pinkStyle, bio ->
+            onSubmit = { fullName, username, phone, city, pinkStyle, bio ->
               viewModel.submitProfileUpdate(
                 fullName = fullName,
                 username = username,
+                phone = phone,
+                city = city,
                 pinkStyle = pinkStyle,
                 bio = bio,
                 photoUrl = state.profile.photoUrl ?: user.photoUrl?.toString(),

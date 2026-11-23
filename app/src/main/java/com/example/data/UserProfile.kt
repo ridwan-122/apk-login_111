@@ -61,6 +61,8 @@ data class UserProfile(
   val email: String = "",
   val fullName: String = "",
   val username: String = "",
+  val phone: String = "",
+  val city: String = "",
   val pinkStyle: String = PinkStyle.ROSE_QUARTZ.name,
   val bio: String = "",
   val photoUrl: String? = null,
@@ -83,8 +85,34 @@ data class LoginLog(
   @ServerTimestamp val loginAt: Timestamp? = null,
 )
 
+data class PendingProfileDraft(
+  val isRegisterMode: Boolean,
+  val enteredEmail: String = "",
+  val fullName: String = "",
+  val username: String = "",
+  val phone: String = "",
+  val city: String = "",
+  val bio: String = "",
+  val pinkStyle: PinkStyle = PinkStyle.ROSE_QUARTZ,
+) {
+  fun isCompleteForRegistration(): Boolean {
+    return ProfileValidation.isValidFullName(fullName) &&
+      ProfileValidation.isValidUsername(username) &&
+      ProfileValidation.isValidPhone(phone) &&
+      ProfileValidation.isValidCity(city) &&
+      ProfileValidation.isValidBio(bio)
+  }
+}
+
 object ProfileValidation {
+  private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
   private val USERNAME_REGEX = Regex("^[a-zA-Z0-9_.]+$")
+  private val PHONE_REGEX = Regex("^\\+?[0-9\\s-]{8,20}$")
+
+  fun isValidEmail(value: String): Boolean {
+    val trimmed = value.trim()
+    return trimmed.length in 3..120 && EMAIL_REGEX.matches(trimmed)
+  }
 
   fun isValidFullName(value: String): Boolean {
     val trimmed = value.trim()
@@ -94,6 +122,17 @@ object ProfileValidation {
   fun isValidUsername(value: String): Boolean {
     val trimmed = value.trim()
     return trimmed.length in 3..30 && USERNAME_REGEX.matches(trimmed)
+  }
+
+  fun isValidPhone(value: String): Boolean {
+    val trimmed = value.trim()
+    val digitCount = trimmed.count { it.isDigit() }
+    return trimmed.length in 8..20 && digitCount >= 8 && PHONE_REGEX.matches(trimmed)
+  }
+
+  fun isValidCity(value: String): Boolean {
+    val trimmed = value.trim()
+    return trimmed.length in 2..50
   }
 
   fun isValidBio(value: String): Boolean {

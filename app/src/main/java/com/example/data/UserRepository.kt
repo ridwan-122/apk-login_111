@@ -109,6 +109,8 @@ class UserRepository(
   suspend fun registerProfile(
     fullName: String,
     username: String,
+    phone: String,
+    city: String,
     pinkStyle: PinkStyle,
     bio: String,
     photoUrl: String?,
@@ -118,6 +120,8 @@ class UserRepository(
       val uid = requireUserId()
       val cleanFullName = fullName.trim()
       val cleanUsername = username.trim()
+      val cleanPhone = phone.trim()
+      val cleanCity = city.trim()
       val cleanBio = bio.trim()
       val cleanPhotoUrl = photoUrl?.trim()?.takeIf { it.isNotEmpty() && it.length <= 500 }
 
@@ -126,6 +130,12 @@ class UserRepository(
       }
       require(ProfileValidation.isValidUsername(cleanUsername)) {
         "Username harus 3-30 karakter (huruf, angka, titik, garis bawah)."
+      }
+      require(ProfileValidation.isValidPhone(cleanPhone)) {
+        "Nomor telepon harus 8-20 karakter angka."
+      }
+      require(ProfileValidation.isValidCity(cleanCity)) {
+        "Kota domisili harus 2-50 karakter."
       }
       require(ProfileValidation.isValidBio(cleanBio)) {
         "Bio maksimal 160 karakter."
@@ -142,6 +152,8 @@ class UserRepository(
             "email" to safeEmail,
             "fullName" to cleanFullName,
             "username" to cleanUsername,
+            "phone" to cleanPhone,
+            "city" to cleanCity,
             "pinkStyle" to pinkStyle.name,
             "bio" to cleanBio.takeIf { it.isNotEmpty() },
             "photoUrl" to cleanPhotoUrl,
@@ -219,6 +231,8 @@ class UserRepository(
   suspend fun updateProfile(
     fullName: String,
     username: String,
+    phone: String,
+    city: String,
     pinkStyle: PinkStyle,
     bio: String,
     photoUrl: String?,
@@ -228,6 +242,8 @@ class UserRepository(
       val uid = requireUserId()
       val cleanFullName = fullName.trim()
       val cleanUsername = username.trim()
+      val cleanPhone = phone.trim()
+      val cleanCity = city.trim()
       val cleanBio = bio.trim()
       val cleanPhotoUrl = photoUrl?.trim()?.takeIf { it.isNotEmpty() && it.length <= 500 }
 
@@ -236,6 +252,12 @@ class UserRepository(
       }
       require(ProfileValidation.isValidUsername(cleanUsername)) {
         "Username harus 3-30 karakter (huruf, angka, titik, garis bawah)."
+      }
+      require(ProfileValidation.isValidPhone(cleanPhone)) {
+        "Nomor telepon harus 8-20 karakter angka."
+      }
+      require(ProfileValidation.isValidCity(cleanCity)) {
+        "Kota domisili harus 2-50 karakter."
       }
       require(ProfileValidation.isValidBio(cleanBio)) {
         "Bio maksimal 160 karakter."
@@ -248,6 +270,8 @@ class UserRepository(
         mutableMapOf<String, Any>(
           "fullName" to cleanFullName,
           "username" to cleanUsername,
+          "phone" to cleanPhone,
+          "city" to cleanCity,
           "pinkStyle" to pinkStyle.name,
           "bio" to cleanBio,
           "updatedAt" to FieldValue.serverTimestamp(),
